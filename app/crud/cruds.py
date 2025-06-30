@@ -8,7 +8,7 @@ def create_task(session:Session,task_data:TaskCreate) -> Task:
     task = Task.from_orm(task_data)
     session.add(task)
     session.commit()
-    session.refresh()
+    session.refresh(task)
     return task
 
 
@@ -24,15 +24,26 @@ def update_task(session: Session, task_id: int, updates: TaskUpdate) -> Optional
     if not task:
         return None
 
-    task_data = updates.dict(exclude_unset=True)
+    task_data = updates.model_dump(exclude_unset=True)
     for key, value in task_data.items():
         setattr(task, key, value)
 
-    task.updated_at = datetime.utcnow()
+    task.updated_at = datetime.now()
     session.add(task)
     session.commit()
     session.refresh(task)
     return task
+
+
+# adding more than one item
+def create_many_tasks(session: Session, task_list: list[TaskCreate]) -> list[Task]:
+    tasks = [Task.from_orm(task_data) for task_data in task_list]
+    session.add_all(tasks)
+    session.commit()
+    for task in tasks:
+        session.refresh(task)
+    return tasks
+
 
 
 
@@ -46,7 +57,11 @@ def delete_task(session: Session,task_id:int)->bool:
 
 
 def get_by_status(session: Session,status: str)-> list[Task]:
-    return session.query(select(Task).where(Task.status==status).all())
+    sql_statment= select(Task).where(Task.status==status)
+    return session.exec(sql_statment).all()
 
 def get_by_priority(session:Session,priority: str):
-    return session.query(select(Task).where(Task.priority==priority)).all()
+    sql_statment= select(Task).where(Task.priority==priority)
+    return session.exec(sql_statment).all()
+
+
