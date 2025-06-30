@@ -1,4 +1,4 @@
-from models.taskmodel import TaskStatus ,TaskPriority
+from  app.models.taskmodel import  TaskStatus ,TaskPriority
 
 from pydantic import BaseModel,Field , field_validator
 from datetime import datetime
@@ -19,7 +19,7 @@ class TaskCreate(BaseModel):
             raise ValueError("title can not be empty")
         return title_in
 
-    @field_validator
+    @field_validator("due_date")
     def due_date_validator(cls,date_in):
         if date_in and date_in <= datetime.now():
             raise ValueError ("date must be in future")
@@ -35,7 +35,7 @@ class TaskUpdate(BaseModel):
     due_date: Optional[datetime]
     assigned_to: Optional[str] = Field(None, max_length=100)
 
-    @validator("title")
+    @field_validator("title")
     def validate_title(cls, v):
         if v is not None:
             v = v.strip()
@@ -43,7 +43,7 @@ class TaskUpdate(BaseModel):
                 raise ValueError("Title cannot be empty or whitespace")
         return v
 
-    @validator("due_date")
+    @field_validator("due_date")
     def validate_due_date(cls, v):
         if v and v <= datetime.utcnow():
             raise ValueError("Due date must be in the future")

@@ -4,7 +4,7 @@ from app.routes import taskroutes
 
 from contextlib import asynccontextmanager
 from app.db.session import init_db
-async def lifspan(app: FastAPI):
+async def lifespan(app: FastAPI):
     init_db()
     yield
     
@@ -13,7 +13,7 @@ async def lifspan(app: FastAPI):
 
 
 
-app = FastAPI(lifspan=lifspan)
+app = FastAPI(lifespan=lifespan)
 
 
 app.include_router(taskroutes.router)
