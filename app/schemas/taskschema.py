@@ -14,19 +14,27 @@ class TaskCreate(BaseModel):
     
     @field_validator("title")
     def validate_title(cls,title_in):
-        title_in= title_in.stripe()
+        title_in= title_in.strip()
         if not title_in:
             raise ValueError("title can not be empty")
         return title_in
 
-    @field_validator("due_date")
-    def due_date_validator(cls,date_in):
+    @field_validator("due_date", mode="before")
+    def parse_due_date(cls, value: Optional[str]):
+        if value is None:
+            return None
+        try:
+            value = value.strip()
+            return datetime.strptime(value, "%Y-%m-%d:%H")
+        except ValueError:
+            raise ValueError("due_date must be in format 'YYYY-MM-DD:HH'")
+
+    # Validate that the due date is in the future
+    @field_validator("due_date", mode="after")
+    def validate_due_date(cls, date_in: Optional[datetime]):
         if date_in and date_in <= datetime.now():
-            raise ValueError ("date must be in future")
-
+            raise ValueError("Due date must be in the future")
         return date_in
-
-
 class TaskUpdate(BaseModel):
     title: Optional[str] = Field(None, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
@@ -36,19 +44,29 @@ class TaskUpdate(BaseModel):
     assigned_to: Optional[str] = Field(None, max_length=100)
 
     @field_validator("title")
-    def validate_title(cls, v):
-        if v is not None:
-            v = v.strip()
-            if not v:
+    def validate_title(cls, title):
+        if title is not None:
+            title = title.strip()
+            if not title:
                 raise ValueError("Title cannot be empty or whitespace")
-        return v
+        return title
 
-    @field_validator("due_date")
-    def validate_due_date(cls, v):
-        if v and v <= datetime.utcnow():
+    @field_validator("due_date", mode="before")
+    def parse_due_date(cls, value: Optional[str]):
+        if value is None:
+            return None
+        try:
+            value = value.strip()
+            return datetime.strptime(value, "%Y-%m-%d:%H")
+        except ValueError:
+            raise ValueError("due_date must be in format 'YYYY-MM-DD:HH'")
+
+    # Validate that the due date is in the future
+    @field_validator("due_date", mode="after")
+    def validate_due_date(cls, date_in: Optional[datetime]):
+        if date_in and date_in <= datetime.now():
             raise ValueError("Due date must be in the future")
-        return v
-    
+        return date_in
 class TaskResponse(BaseModel):
     id: int
     title: str
@@ -60,5 +78,6 @@ class TaskResponse(BaseModel):
     due_date: Optional[datetime]
     assigned_to: Optional[str]
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }

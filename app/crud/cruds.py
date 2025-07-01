@@ -2,7 +2,7 @@ from sqlmodel import Session , select
 from typing import Optional
 from app.models.taskmodel import Task
 from app.schemas.taskschema import TaskCreate  , TaskUpdate
-
+from fastapi import HTTPException
 from datetime import datetime
 def create_task(session:Session,task_data:TaskCreate) -> Task:
     task = Task.from_orm(task_data)
@@ -22,7 +22,7 @@ def get_all_tasks(session: Session,skip:int=0,limit:int=10)-> list[Task]:
 def update_task(session: Session, task_id: int, updates: TaskUpdate) -> Optional[Task]:
     task = session.get(Task, task_id)
     if not task:
-        return None
+        return HTTPException(status_code=404, detail="Task not found")
 
     task_data = updates.model_dump(exclude_unset=True)
     for key, value in task_data.items():
@@ -47,21 +47,27 @@ def create_many_tasks(session: Session, task_list: list[TaskCreate]) -> list[Tas
 
 
 
-def delete_task(session: Session,task_id:int)->bool:
-    task = Session.get(Task,task_id)
-    if not task :
+def delete_task(session: Session, task_id: int) -> bool:
+    task = session.get(Task, task_id)
+    if not task:
         return False
     session.delete(task)
     session.commit()
     return True
 
 
-def get_by_status(session: Session,status: str)-> list[Task]:
-    sql_statment= select(Task).where(Task.status==status)
-    return session.exec(sql_statment).all()
 
-def get_by_priority(session:Session,priority: str):
-    sql_statment= select(Task).where(Task.priority==priority)
-    return session.exec(sql_statment).all()
+
+def get_by_status(session: Session,status: str)-> list[Task]:
+    sql_statement = select(Task).where(Task.status == status)
+    runner = session.exec(sql_statement).all()
+    return runner
+
+
+def get_by_priority(session: Session, priority: str) -> list[Task]:
+    sql_statement = select(Task).where(Task.priority == priority)
+    runner = session.exec(sql_statement).all()
+    return runner  
+
 
 
