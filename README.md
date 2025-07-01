@@ -50,7 +50,6 @@ The frontend will run on [http://localhost:3000](http://localhost:3000) by defau
 
 - `tasker/` - Python backend (FastAPI)
 - `frontend/` - React frontend
-- `README.md` - This file
 
 ---
 
@@ -125,7 +124,7 @@ curl http://localhost:8000/tasks/status/pending
 ```bash
 curl http://localhost:8000/tasks/priority/high
 ```
-
+thanks for your consideration
 ---
 
 
